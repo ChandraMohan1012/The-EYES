@@ -165,7 +165,7 @@ function toFiniteNumber(raw: string | undefined, fallback: number) {
   return parsed;
 }
 
-const SUPPORTED_PLATFORMS = new Set(['github', 'gmail', 'google_calendar', 'notion', 'reddit']);
+const SUPPORTED_PLATFORMS = new Set(['github', 'gmail', 'google_calendar', 'notion', 'reddit', 'slack', 'linkedin', 'discord']);
 const SYNC_TIMEOUT_MS = Number(process.env.CRON_SYNC_TIMEOUT_MS || 20000);
 const EMBEDDINGS_TIMEOUT_MS = Number(process.env.CRON_EMBEDDINGS_TIMEOUT_MS || 25000);
 const DEFAULT_MAX_USERS_PER_RUN = Number(process.env.CRON_MAX_USERS_PER_RUN || 10);
