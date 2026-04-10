@@ -2,7 +2,7 @@
 
 import React from 'react';
 import styles from '../MainContent.module.css';
-import { SearchIcon, ArrowRightIcon, ShieldIcon } from '../icons/PlatformIcons';
+import { SearchIcon, ArrowRightIcon, ShieldIcon } from '../common/icons/PlatformIcons';
 import type { Message } from '@/types/dashboard';
 
 interface SynthesisViewProps {
@@ -14,8 +14,7 @@ interface SynthesisViewProps {
 
   onSubmit: (text: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  activeView: string;
-  setView: (v: string) => void;
+  setView: (v: any) => void;
   totalMemories: number;
 }
 
@@ -87,3 +86,4 @@ export function SynthesisView({
     </div>
   );
 }
+
