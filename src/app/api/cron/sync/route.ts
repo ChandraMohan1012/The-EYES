@@ -449,7 +449,10 @@ function getCronSecret(request: Request): string | null {
   }
 
   const xSecret = request.headers.get('x-cron-secret');
-  return xSecret?.trim() || null;
+  if (xSecret) return xSecret.trim();
+
+  const url = new URL(request.url);
+  return url.searchParams.get('secret')?.trim() || null;
 }
 
 function isAuthorizedCron(request: Request): boolean {
