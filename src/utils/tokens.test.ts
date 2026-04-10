@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { decryptToken, encryptToken } from '@/utils/tokens';
+import { decryptToken, encryptToken } from '@/services/auth/tokens';
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -34,3 +34,4 @@ describe('token encryption', () => {
     expect(() => decryptToken('enc:v1:iv:payload:tag')).toThrowError(/TOKEN_ENCRYPTION_KEY is required/i);
   });
 });
+

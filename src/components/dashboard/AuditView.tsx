@@ -3,7 +3,7 @@
 import React from 'react';
 import styles from '../MainContent.module.css';
 import type { AuditSummary } from '@/types/dashboard';
-import { ShieldIcon } from '../icons/PlatformIcons';
+import { ShieldIcon } from '../common/icons/PlatformIcons';
 
 interface AuditViewProps {
   onBack: () => void;
@@ -76,3 +76,4 @@ export function AuditView({ onBack, summary }: AuditViewProps) {
     </div>
   );
 }
+

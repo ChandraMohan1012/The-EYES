@@ -131,3 +131,4 @@ export async function GET() {
     return NextResponse.json({ platforms: [] }, { status: 200 });
   }
 }
+

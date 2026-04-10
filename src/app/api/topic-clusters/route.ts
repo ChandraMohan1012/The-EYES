@@ -222,3 +222,4 @@ export async function GET() {
     return NextResponse.json({ clusters: [] }, { status: 200 });
   }
 }
+

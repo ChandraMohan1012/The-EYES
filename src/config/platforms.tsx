@@ -10,7 +10,7 @@ import {
   DiscordIconOfficial, 
   XIconOfficial, 
   DropboxIconOfficial 
-} from '../components/icons/PlatformIcons';
+} from '../components/common/icons/PlatformIcons';
 
 export const ALL_POSSIBLE_PLATFORMS = [
   { id: 'github', name: 'GitHub', icon: <GitHubIconOfficial /> },
@@ -24,3 +24,4 @@ export const ALL_POSSIBLE_PLATFORMS = [
   { id: 'twitter', name: 'X (Twitter)', icon: <XIconOfficial /> },
   { id: 'dropbox', name: 'Dropbox', icon: <DropboxIconOfficial /> }
 ];
+

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { generateEmbedding } from '@/utils/ai';
-import { buildDeterministicChunks } from '@/utils/ai/chunking';
+import { generateEmbedding } from '@/services/ai/ai';
+import { buildDeterministicChunks } from '@/services/ai/chunking';
 import { resolveSyncActor } from '@/utils/sync/actor';
 
 /**
@@ -100,3 +100,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to generate memory embeddings.' }, { status: 500 });
   }
 }
+

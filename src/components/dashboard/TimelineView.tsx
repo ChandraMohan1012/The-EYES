@@ -63,3 +63,4 @@ export function TimelineView({ onBack }: TimelineViewProps) {
     </div>
   );
 }
+

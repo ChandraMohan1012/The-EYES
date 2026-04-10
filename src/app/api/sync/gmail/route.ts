@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { upsertRawEventsSafely, upsertSyncStatusSafely } from '@/utils/supabase/upsert';
-import { getValidGoogleToken } from '@/utils/oauth';
+import { getValidGoogleToken } from '@/services/auth/oauth';
 import { scoreGmailEvent } from '@/utils/risk/scorer';
 import { resolveSyncActor } from '@/utils/sync/actor';
 
@@ -139,3 +139,4 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
+

@@ -151,3 +151,4 @@ export async function GET() {
     return NextResponse.json({ events: [], timeline: [], timelineStats: null }, { status: 200 });
   }
 }
+

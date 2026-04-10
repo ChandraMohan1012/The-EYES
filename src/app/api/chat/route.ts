@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { generateEmbedding, chatCompletion, chatCompletionStream } from '@/utils/ai';
+import { generateEmbedding, chatCompletion, chatCompletionStream } from '@/services/ai/ai';
 
 type ChatHistoryMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 type ChatRequestBody = { message?: string; history?: ChatHistoryMessage[] };
@@ -309,3 +309,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal neural failure.' }, { status: 500 });
   }
 }
+

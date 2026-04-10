@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeBackoffDelayMs, isRetryableGoogleRefreshFailure } from '@/utils/oauth';
+import { computeBackoffDelayMs, isRetryableGoogleRefreshFailure } from '@/services/auth/oauth';
 
 describe('oauth refresh retry helpers', () => {
   it('computes bounded exponential backoff delays with jitter', () => {
@@ -20,3 +20,4 @@ describe('oauth refresh retry helpers', () => {
     expect(isRetryableGoogleRefreshFailure(403, { error: 'forbidden' })).toBe(false);
   });
 });
+

@@ -72,7 +72,7 @@ function MainContentInner({ onLoaded }: { onLoaded?: () => void }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const setView = (v: ViewMode) => {
+  const setView = (v: string) => {
     router.push(`?view=${v}`, { scroll: false });
   };
 
@@ -179,3 +179,4 @@ export default function MainContent(props: { onLoaded?: () => void }) {
     </Suspense>
   ); 
 }
+

@@ -66,3 +66,4 @@ export function DashboardHomeView({ platforms }: DashboardHomeViewProps) {
     </div>
   );
 }
+

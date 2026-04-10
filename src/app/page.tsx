@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
+import Sidebar from '@/components/layout/Sidebar';
+import Header from '@/components/layout/Header';
 import MainContent from '@/components/MainContent';
 import styles from './page.module.css';
 
@@ -37,3 +37,4 @@ export default function Home() {
     </div>
   );
 }
+

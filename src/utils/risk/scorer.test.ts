@@ -40,3 +40,4 @@ describe('risk scorer', () => {
     expect(result.score).toBeLessThan(45);
   });
 });
+

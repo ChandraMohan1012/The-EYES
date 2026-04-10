@@ -56,3 +56,4 @@ export interface Message {
   content: string;
   pending?: boolean;
 }
+
