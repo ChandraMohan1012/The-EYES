@@ -141,7 +141,6 @@ function MainContentInner({ onLoaded }: { onLoaded?: () => void }) {
 
           onSubmit={handleSubmit}
           messagesEndRef={messagesEndRef}
-          activeView={activeView}
           setView={setView}
           totalMemories={summary.totalMemories}
         />
