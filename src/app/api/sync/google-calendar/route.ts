@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getValidGoogleToken } from '@/services/auth/oauth';
+import { getValidGoogleToken } from '@/utils/oauth';
 import { upsertRawEventsSafely, upsertSyncStatusSafely } from '@/utils/supabase/upsert';
 import { resolveSyncActor } from '@/utils/sync/actor';
 
@@ -123,4 +123,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unable to sync Google Calendar data right now.' }, { status: 500 });
   }
 }
-

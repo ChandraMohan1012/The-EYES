@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { createClient } from '@/utils/supabase/server';
-import { encryptToken } from '@/services/auth/tokens';
+import { encryptToken } from '@/utils/tokens';
 
 type GitHubTokenResponse = {
   access_token?: string;
@@ -104,4 +104,3 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(new URL('/connect/github?oauth=success', appBaseUrl()));
 }
-

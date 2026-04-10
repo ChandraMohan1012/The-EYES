@@ -140,4 +140,3 @@ export async function upsertSyncStatusSafely(supabase: SupabaseClient, syncStatu
     }
   }
 }
-

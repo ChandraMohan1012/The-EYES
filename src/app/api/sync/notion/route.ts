@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { upsertRawEventsSafely, upsertSyncStatusSafely } from '@/utils/supabase/upsert';
-import { decryptToken } from '@/services/auth/tokens';
+import { decryptToken } from '@/utils/tokens';
 import { resolveSyncActor } from '@/utils/sync/actor';
 
 type NotionSearchResult = {
@@ -129,4 +129,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unable to sync Notion data right now.' }, { status: 500 });
   }
 }
-
