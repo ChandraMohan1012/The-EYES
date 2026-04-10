@@ -7,6 +7,7 @@ import MainContent from '@/components/MainContent';
 import styles from './page.module.css';
 
 export default function Home() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSystemBooting, setIsSystemBooting] = useState(true);
 
   // Synchronize loading across components
@@ -25,15 +26,25 @@ export default function Home() {
           <div className={styles.bootProgressLine} />
         </div>
       )}
-      <div className={`${styles.sidebarWrapper} ${isSystemBooting ? styles.hidden : ''}`}>
+      <div 
+        className={`${styles.sidebarWrapper} ${isSystemBooting ? styles.hidden : ''} ${isSidebarOpen ? styles.sidebarVisible : ''}`}
+        onClick={() => setIsSidebarOpen(false)}
+      >
         <Sidebar />
       </div>
       <div className={`${styles.headerWrapper} ${isSystemBooting ? styles.hidden : ''}`}>
-        <Header />
+        <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       </div>
       <div className={`${styles.mainWrapper} ${isSystemBooting ? styles.hidden : ''}`}>
         <MainContent onLoaded={handleBootComplete} />
       </div>
+
+      {isSidebarOpen && (
+        <div 
+          className={styles.mobileOverlay} 
+          onClick={() => setIsSidebarOpen(false)} 
+        />
+      )}
     </div>
   );
 }

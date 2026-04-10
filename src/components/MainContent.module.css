@@ -836,3 +836,91 @@
   color: white;
 }
 
+@media (max-width: 768px) {
+  .heroLayout {
+    padding: 60px 20px 40px;
+  }
+
+  .megaTitle {
+    font-size: 48px;
+    letter-spacing: -1px;
+  }
+
+  .heroSummary {
+    font-size: 14px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .commandContainer {
+    margin-top: 40px;
+  }
+
+  .commandInputBox {
+    padding: 10px 10px 10px 48px;
+    min-height: 56px;
+  }
+
+  .searchIcon {
+    left: 16px;
+  }
+
+  .shortcutHint {
+    display: none;
+  }
+
+  .quickActions {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 40px;
+  }
+
+  .actionCard {
+    text-align: center;
+  }
+
+  .soloView {
+    padding: 24px 20px;
+  }
+
+  .soloTitle {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .auditGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .auditMainCard {
+    flex-direction: column;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .readinessGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .graphContainer {
+    padding: 40px 20px 40px 60px;
+    height: 300px;
+  }
+
+  .yAxisLabel {
+    left: 10px;
+    font-size: 9px;
+  }
+
+  .feedEventCard {
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .eventIconWrapper {
+    width: 40px;
+    height: 40px;
+  }
+}
