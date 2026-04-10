@@ -1,0 +1,26 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+  color: #dbeafe;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  margin-bottom: 24px;
+  color: #93c5fd;
+}
+
+.section {
+  margin-bottom: 22px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  margin-bottom: 8px;
+}

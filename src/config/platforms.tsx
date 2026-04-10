@@ -1,0 +1,26 @@
+import React from 'react';
+import { 
+  RedditIconOfficial, 
+  GitHubIconOfficial, 
+  GmailIconOfficial, 
+  CalendarIconOfficial, 
+  NotionIconOfficial, 
+  SlackIconOfficial, 
+  LinkedInIconOfficial, 
+  DiscordIconOfficial, 
+  XIconOfficial, 
+  DropboxIconOfficial 
+} from '../components/icons/PlatformIcons';
+
+export const ALL_POSSIBLE_PLATFORMS = [
+  { id: 'github', name: 'GitHub', icon: <GitHubIconOfficial /> },
+  { id: 'gmail', name: 'Gmail', icon: <GmailIconOfficial /> },
+  { id: 'google-calendar', name: 'Google Calendar', icon: <CalendarIconOfficial /> },
+  { id: 'reddit', name: 'Reddit', icon: <RedditIconOfficial /> },
+  { id: 'notion', name: 'Notion', icon: <NotionIconOfficial /> },
+  { id: 'slack', name: 'Slack', icon: <SlackIconOfficial /> },
+  { id: 'linkedin', name: 'LinkedIn', icon: <LinkedInIconOfficial /> },
+  { id: 'discord', name: 'Discord', icon: <DiscordIconOfficial /> },
+  { id: 'twitter', name: 'X (Twitter)', icon: <XIconOfficial /> },
+  { id: 'dropbox', name: 'Dropbox', icon: <DropboxIconOfficial /> }
+];
