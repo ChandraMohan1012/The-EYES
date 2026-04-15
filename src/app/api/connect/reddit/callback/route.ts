@@ -4,8 +4,13 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { encryptToken } from '@/utils/tokens';
 
-function appBaseUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+function getAppBaseUrl(request: Request) {
+  const host = request.headers.get('host') || 'localhost:3000';
+  let protocol = 'https';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    protocol = 'http';
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
 }
 
 export async function GET(request: Request) {
@@ -13,22 +18,24 @@ export async function GET(request: Request) {
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
 
+  const baseUrl = getAppBaseUrl(request);
+
   const clientId = process.env.REDDIT_CLIENT_ID;
   const clientSecret = process.env.REDDIT_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=missing_reddit_env', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=missing_reddit_env', baseUrl));
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=missing_code_or_state', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=missing_code_or_state', baseUrl));
   }
 
   const cookieStore = await cookies();
   const expectedState = cookieStore.get('reddit_oauth_state')?.value;
 
   if (!expectedState || expectedState !== state) {
-    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=invalid_state', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=invalid_state', baseUrl));
   }
 
   cookieStore.delete('reddit_oauth_state');
@@ -37,7 +44,7 @@ export async function GET(request: Request) {
   const { data: authData } = await supabase.auth.getUser();
 
   if (!authData.user) {
-    return NextResponse.redirect(new URL('/login', appBaseUrl()));
+    return NextResponse.redirect(new URL('/login', baseUrl));
   }
 
   const tokenResponse = await fetch('https://www.reddit.com/api/v1/access_token', {
@@ -50,13 +57,13 @@ export async function GET(request: Request) {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: new URL('/api/connect/reddit/callback', appBaseUrl()).toString(),
+      redirect_uri: new URL('/api/connect/reddit/callback', baseUrl).toString(),
     }),
     cache: 'no-store',
   });
 
   if (!tokenResponse.ok) {
-    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=token_exchange_failed', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=token_exchange_failed', baseUrl));
   }
 
   const tokenBody = (await tokenResponse.json()) as {
@@ -69,7 +76,7 @@ export async function GET(request: Request) {
 
   if (!tokenBody.access_token) {
     return NextResponse.redirect(
-      new URL(`/connect/reddit?oauth=error&reason=${encodeURIComponent(tokenBody.error || 'no_access_token')}`, appBaseUrl())
+      new URL(`/connect/reddit?oauth=error&reason=${encodeURIComponent(tokenBody.error || 'no_access_token')}`, baseUrl)
     );
   }
 
@@ -102,8 +109,8 @@ export async function GET(request: Request) {
   ]);
 
   if (tokenSaveError || syncSaveError) {
-    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=token_persist_failed', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/reddit?oauth=error&reason=token_persist_failed', baseUrl));
   }
 
-  return NextResponse.redirect(new URL('/connect/reddit?oauth=success', appBaseUrl()));
+  return NextResponse.redirect(new URL('/connect/reddit?oauth=success', baseUrl));
 }
