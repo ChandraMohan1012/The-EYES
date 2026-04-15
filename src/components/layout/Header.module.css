@@ -44,6 +44,43 @@
   -webkit-text-fill-color: transparent;
 }
 
+.neuralStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-green);
+  animation: statusPulse 2s infinite;
+}
+
+.dotSyncing {
+  background: #00ffcc;
+  box-shadow: 0 0 12px #00ffcc, 0 0 20px rgba(0, 255, 204, 0.4);
+  animation: statusPulse 0.8s infinite !important;
+}
+
+.statusText {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--accent-green);
+  opacity: 0.8;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
 .menuOpenBtn {
   display: none;
   background: none;

@@ -52,20 +52,36 @@ export function MemoryFeedView({
             .filter(e => filterPlatform === 'all' || e.platform.toLowerCase() === filterPlatform.toLowerCase())
             .map((e) => {
             const platform = ALL_POSSIBLE_PLATFORMS.find(p => p.id === e.platform.toLowerCase());
+            const hasRisk = e.is_flagged || e.flag_severity;
+            
             return (
-              <div key={e.id} className={styles.feedEventCard}>
+              <div key={e.id} className={`${styles.feedEventCard} ${hasRisk ? styles.cardHasRisk : ''}`}>
                  <div className={styles.eventIconWrapper}>
                     {platform?.icon || <div className={styles.fallbackIcon}>{e.platform[0]}</div>}
                  </div>
                  <div className={styles.eventMain}>
                     <div className={styles.eventMeta}>
-                       <span className={styles.platformBadge}>{e.platform}</span>
-                       <span className={styles.eventTime}>{e.timestamp ? new Date(e.timestamp).toLocaleDateString() : 'Recent'}</span>
+                       <div className={styles.metaLeft}>
+                         <span className={styles.platformBadge}>{e.platform}</span>
+                         <span className={styles.eventTime}>{e.timestamp ? new Date(e.timestamp).toLocaleDateString() : 'Recent'}</span>
+                       </div>
+                       {hasRisk && (
+                         <span className={`${styles.riskTag} ${styles['risk' + (e.flag_severity || 'LOW')]}`}>
+                           {e.flag_severity || 'FLAGGED'}
+                         </span>
+                       )}
                     </div>
                     <h3 className={styles.eventTitle}>{e.title || 'Indexed Discovery'}</h3>
                     <p className={styles.eventBody}>{e.content}</p>
+                    {e.flag_reason && (
+                      <div className={styles.riskReasonOuter}>
+                        <span className={styles.riskReasonLabel}>Reputation Signal:</span>
+                        <span className={styles.riskReasonText}>{e.flag_reason}</span>
+                      </div>
+                    )}
                     <div className={styles.eventFooter}>
                        <span className={styles.categoryTag}>MEMORY INDEX</span>
+                       <span className={styles.typeTag}>{e.event_type || 'Event'}</span>
                     </div>
                  </div>
               </div>

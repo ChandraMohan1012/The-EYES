@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { resolveSyncActor } from '@/utils/sync/actor';
+import { upsertSyncStatusSafely } from '@/utils/supabase/upsert';
 
 export async function POST(request: Request) {
-  const authHeader = request.headers.get('x-cron-secret');
-  const userId = request.headers.get('x-cron-user-id');
-
-  if (authHeader !== process.env.CRON_SECRET || !userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const actor = await resolveSyncActor(request);
+  if ('status' in actor) {
+    return NextResponse.json({ error: actor.error }, { status: actor.status });
   }
 
-  const supabase = createAdminClient();
+  const { supabase, userId } = actor;
 
   try {
     // 1. Get Token
@@ -44,15 +43,29 @@ export async function POST(request: Request) {
 
     if (eventError) throw eventError;
 
-    // 4. Update Sync Status
-    await supabase
-      .from('sync_status')
-      .update({ 
-        last_sync_at: new Date().toISOString(),
-        status: 'idle'
-      })
-      .eq('user_id', userId)
-      .eq('platform', 'linkedin');
+    // 4. Update Sync Status & Profile
+    const { count: totalMemories } = await supabase
+      .from('raw_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const now = new Date().toISOString();
+    await Promise.all([
+      upsertSyncStatusSafely(supabase, {
+        user_id: userId,
+        platform: 'linkedin',
+        status: 'connected',
+        sync_progress: 100,
+        total_items: mockEvents.length,
+        last_sync_at: now,
+        next_sync_at: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+        error_message: null,
+      }),
+      supabase.from('user_profiles').update({
+        memories_indexed: totalMemories ?? mockEvents.length,
+        updated_at: now,
+      }).eq('user_id', userId),
+    ]);
 
     return NextResponse.json({ success: true, count: mockEvents.length });
   } catch (err) {

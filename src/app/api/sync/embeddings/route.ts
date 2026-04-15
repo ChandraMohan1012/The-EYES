@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { generateEmbedding } from '@/utils/ai';
-import { buildDeterministicChunks } from '@/utils/ai/chunking';
+import { generateEmbedding } from '@/services/ai/ai';
+import { buildDeterministicChunks } from '@/services/ai/chunking';
 import { resolveSyncActor } from '@/utils/sync/actor';
 
 /**
  * Background worker to generate embeddings for all 'raw_events' that haven't been indexed.
- * This makes them searchable via 'Ask Your Memory'.
+ * Optimized for high-throughput memory synthesis.
  */
 export async function POST(request: Request) {
   try {
@@ -16,37 +16,25 @@ export async function POST(request: Request) {
 
     const { supabase, userId } = actor;
 
-    // Find the latest events that don't have an embedding yet
-    // Strategy: Join raw_events with embeddings on event_id and find nulls
+    // Find events that don't have embeddings yet using a left join approach
+    // Note: In Supabase/Postgrest, we can filter by 'embeddings!left' where 'id' is null
     const { data: events, error: fetchError } = await supabase
       .from('raw_events')
-      .select('id, platform, event_type, title, content')
+      .select('id, platform, event_type, title, content, embeddings(id)')
       .eq('user_id', userId)
       .not('content', 'is', null)
-      .limit(20); // Process in small batches to stay within serverless timeouts
+      .is('embeddings.id', null) // Only those without embeddings
+      .limit(50); // Increased batch size for faster cold-starts
 
     if (fetchError) throw fetchError;
     if (!events || events.length === 0) {
-      return NextResponse.json({ message: 'All memories are already indexed.', count: 0 });
+      return NextResponse.json({ message: 'Neural index is current.', count: 0 });
     }
 
-    // Check which ones already have embeddings to avoid double-spend
-    const { data: existing } = await supabase
-      .from('embeddings')
-      .select('event_id')
-      .eq('user_id', userId);
-    
-    const existingIds = new Set(existing?.map(e => e.event_id) || []);
-    const pendingEvents = events.filter(e => !existingIds.has(e.id));
-
-    if (pendingEvents.length === 0) {
-       return NextResponse.json({ message: 'All memories in this batch already have embeddings.', count: 0 });
-    }
-
-    console.log(`[AI-Brain] Indexing ${pendingEvents.length} new memories for ${userId}`);
+    console.log(`[AI-Brain] Indexing ${events.length} memories for user ${userId}`);
 
     const indexResults = await Promise.all(
-      pendingEvents.map(async (event) => {
+      events.map(async (event) => {
         const chunks = buildDeterministicChunks({
           platform: event.platform,
           eventType: event.event_type,
@@ -58,9 +46,7 @@ export async function POST(request: Request) {
 
         for (const chunk of chunks) {
           const result = await generateEmbedding(chunk);
-          if (!result) {
-            continue;
-          }
+          if (!result) continue;
 
           const { error: insertError } = await supabase
             .from('embeddings')
@@ -72,7 +58,7 @@ export async function POST(request: Request) {
             });
 
           if (insertError) {
-            console.warn('[AI-Brain] Failed to persist embedding chunk:', insertError.message);
+            console.warn('[AI-Brain] Persistence failed for chunk:', insertError.message);
             continue;
           }
 
@@ -89,14 +75,25 @@ export async function POST(request: Request) {
     const successCount = indexResults.filter((result) => result.indexedEvent).length;
     const indexedChunkCount = indexResults.reduce((total, result) => total + result.indexedChunks, 0);
 
+    // Update user profile with new count
+    const { count: totalIndexed } = await supabase
+      .from('embeddings')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    await supabase
+      .from('user_profiles')
+      .update({ memories_indexed: totalIndexed || 0 })
+      .eq('user_id', userId);
+
     return NextResponse.json({ 
-      message: `Memory indexing cycle complete.`, 
+      message: `Neural indexing cycle complete.`, 
       indexed: successCount,
       indexedChunks: indexedChunkCount,
-      pending: pendingEvents.length - successCount
+      totalAtUser: totalIndexed
     });
   } catch (err) {
-    console.error('[AI-Brain] Indexing cycle failed:', err);
-    return NextResponse.json({ error: 'Failed to generate memory embeddings.' }, { status: 500 });
+    console.error('[AI-Brain] Deep indexing failure:', err);
+    return NextResponse.json({ error: 'Internal neural link failure during indexing.' }, { status: 500 });
   }
 }

@@ -5,22 +5,32 @@ import { NextResponse } from 'next/server';
 
 import { createClient } from '@/utils/supabase/server';
 
-function appBaseUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+function getRequestBaseUrl(request: Request) {
+  const host = request.headers.get('host');
+  if (!host) return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  return `${protocol}://${host}`;
 }
 
-export async function GET() {
+function notionRedirectUri(baseUrl: string) {
+  const explicit = process.env.NOTION_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  return new URL('/api/connect/notion/callback', baseUrl).toString();
+}
+
+export async function GET(request: Request) {
+  const baseUrl = getRequestBaseUrl(request);
   const clientId = process.env.NOTION_CLIENT_ID;
 
   if (!clientId) {
-    return NextResponse.redirect(new URL('/connect/notion?oauth=error&reason=missing_notion_client_id', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/notion?oauth=error&reason=missing_notion_client_id', baseUrl));
   }
 
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
 
   if (!authData.user) {
-    return NextResponse.redirect(new URL('/login', appBaseUrl()));
+    return NextResponse.redirect(new URL('/login', baseUrl));
   }
 
   const state = crypto.randomUUID();
@@ -33,12 +43,12 @@ export async function GET() {
     maxAge: 60 * 10,
   });
 
-  const callbackUrl = new URL('/api/connect/notion/callback', appBaseUrl());
+  const callbackUrl = notionRedirectUri(baseUrl);
   const authUrl = new URL('https://api.notion.com/v1/oauth/authorize');
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('owner', 'user');
-  authUrl.searchParams.set('redirect_uri', callbackUrl.toString());
+  authUrl.searchParams.set('redirect_uri', callbackUrl);
   authUrl.searchParams.set('state', state);
 
   return NextResponse.redirect(authUrl);

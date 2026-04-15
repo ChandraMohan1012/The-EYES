@@ -7,8 +7,8 @@
 
 export interface ChunkInput {
   platform: string;
-  eventType: string;
-  title: string;
+  eventType?: string | null;
+  title?: string | null;
   content: string;
 }
 

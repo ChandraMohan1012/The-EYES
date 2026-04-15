@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { generateEmbedding, chatCompletion, chatCompletionStream } from '@/utils/ai';
+import { generateEmbedding, chatCompletion, chatCompletionStream } from '@/services/ai/ai';
 
 type ChatHistoryMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 type ChatRequestBody = { message?: string; history?: ChatHistoryMessage[] };
@@ -64,6 +64,15 @@ function isStreamRequested(request: Request) {
 
 function sanitizeHeaderValue(value: string) {
   return value.replace(/[\r\n]+/g, ' ').trim().slice(0, 180);
+}
+
+function resolveBaseUrl(request: Request) {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    return new URL(request.url).origin;
+  } catch {
+    return 'http://localhost:3000';
+  }
 }
 
 function toConfidenceScore(citations: ChatCitation[]) {
@@ -141,6 +150,27 @@ export async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // --- Autonomous Brain Logic: Trigger sync if brain is empty ---
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('memories_indexed')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || (profile.memories_indexed || 0) === 0) {
+      const baseUrl = resolveBaseUrl(request);
+      console.log(`[Autonomous-Brain] Empty brain detected for ${user.id}. Triggering deep intake...`);
+      // Fire-and-forget sync trigger
+      fetch(`${baseUrl}/api/sync/all?depth=deep`, {
+        method: 'POST',
+        headers: { 
+          'x-cron-secret': process.env.CRON_SECRET || '',
+          'x-cron-user-id': user.id 
+        }
+      }).catch(e => console.error('[Autonomous-Brain] Trigger failure:', e));
+    }
+    // -------------------------------------------------------------
 
     // 1. Generate embedding for the user's question
     const retrievalStartedAt = Date.now();

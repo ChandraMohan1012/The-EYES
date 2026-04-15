@@ -220,6 +220,13 @@ function parseResponsePayload(rawBody: string) {
 }
 
 function resolveBaseUrl(request: Request) {
+  // If we are on localhost, always use relative or local origin to avoid hitting production
+  const host = request.headers.get('host');
+  if (host) {
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    return `${protocol}://${host}`;
+  }
+
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
   }

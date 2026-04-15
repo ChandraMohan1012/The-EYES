@@ -7,7 +7,22 @@ import styles from './Header.module.css';
 export default function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkSyncStatus = async () => {
+      try {
+        const res = await fetch('/api/sync/status');
+        const data = await res.json();
+        setIsSyncing(data.isSyncing || false);
+      } catch (e) {}
+    };
+    checkSyncStatus();
+    const interval = setInterval(checkSyncStatus, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const avatarImageUrl = user?.avatar && user.avatar.length > 2 ? user.avatar : null;
   const avatarInitial = user?.avatar && user.avatar.length <= 2 ? user.avatar : user?.name?.[0] || 'U';
 
@@ -35,6 +50,10 @@ export default function Header({ onMenuToggle }: { onMenuToggle?: () => void }) 
           <EyeIcon />
         </div>
         <span className={styles.logoText}>EYES</span>
+        <div className={styles.neuralStatus}>
+          <span className={`${styles.statusDot} ${isSyncing ? styles.dotSyncing : ''}`} />
+          <span className={styles.statusText}>{isSyncing ? 'NEURAL INTAKE ACTIVE' : 'NEURAL LINK ACTIVE'}</span>
+        </div>
       </div>
 
       <div className={styles.right} ref={menuRef}>

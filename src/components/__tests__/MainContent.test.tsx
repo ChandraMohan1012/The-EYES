@@ -78,7 +78,7 @@ describe("MainContent", () => {
     render(<MainContent />);
 
     expect(await screen.findByRole("heading", { name: "EYES" })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Ask anything about yourself...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search digital memories...")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText(/things you've said since 2018\./i)).toBeInTheDocument();

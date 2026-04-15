@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { upsertRawEventsSafely, upsertSyncStatusSafely } from '@/utils/supabase/upsert';
 import { decryptToken } from '@/utils/tokens';
 import { resolveSyncActor } from '@/utils/sync/actor';
+import { scoreNotionEvent } from '@/utils/risk/scorer';
 
 type NotionSearchResult = {
   id: string;
@@ -61,7 +62,13 @@ export async function POST(request: Request) {
         'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ page_size: 10 }),
+      body: JSON.stringify({ 
+        page_size: 100,
+        sort: {
+          direction: 'descending',
+          timestamp: 'last_edited_time'
+        }
+      }),
       cache: 'no-store',
     });
 
@@ -75,6 +82,7 @@ export async function POST(request: Request) {
     const events = results.map((item) => {
       const title = extractTitle(item);
       const content = `${title} ${item.url || ''}`.trim();
+      const risk = scoreNotionEvent({ title, content });
 
       return {
         user_id: userId,
@@ -89,9 +97,9 @@ export async function POST(request: Request) {
           object: item.object,
           url: item.url,
         },
-        is_flagged: false,
-        flag_severity: 'LOW',
-        flag_reason: null,
+        is_flagged: risk.flagged,
+        flag_severity: risk.severity,
+        flag_reason: risk.reasons.join(', '),
       };
     });
 

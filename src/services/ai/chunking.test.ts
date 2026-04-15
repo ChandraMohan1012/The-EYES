@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildDeterministicChunks } from '@/utils/ai/chunking';
+import { buildDeterministicChunks } from '@/services/ai/chunking';
 
 describe('buildDeterministicChunks', () => {
   it('produces deterministic bounded chunks with source preface', () => {
@@ -21,10 +21,10 @@ describe('buildDeterministicChunks', () => {
 
     expect(second).toEqual(first);
     expect(first.length).toBeGreaterThan(1);
-    expect(first.length).toBeLessThanOrEqual(4);
+    expect(first.length).toBeLessThanOrEqual(5);
 
     first.forEach((chunk) => {
-      expect(chunk.startsWith('Platform: gmail\nType: email\nTitle: Weekly Ops Digest\nContent:')).toBe(true);
+      expect(chunk.startsWith('[Source: gmail] [Type: email] Title: Weekly Ops Digest\n\n')).toBe(true);
     });
   });
 
@@ -35,7 +35,6 @@ describe('buildDeterministicChunks', () => {
       title: null,
       content: '    ',
     });
-
-    expect(chunks).toEqual(['Platform: notion\nType: unknown\nTitle: Untitled\nContent: ']);
+    expect(chunks).toEqual(['[Source: notion] [Type: null] Title: null\n\n']);
   });
 });

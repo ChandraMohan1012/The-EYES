@@ -58,7 +58,11 @@ const hoisted = vi.hoisted(() => {
       if (context.table === 'raw_events' && context.selectedColumns) {
         let rows = state.rawEvents.filter((row) => {
           return Object.entries(context.filters).every(([column, value]) => {
-            return (row as unknown as Record<string, unknown>)[column] === value;
+            const rowValue = (row as unknown as Record<string, unknown>)[column];
+            if (value === null && rowValue === undefined) {
+              return true;
+            }
+            return rowValue === value;
           });
         });
 
@@ -133,6 +137,16 @@ const hoisted = vi.hoisted(() => {
         }
         return builder;
       },
+      is(column: string, value: unknown) {
+        context.filters[column] = value;
+        return builder;
+      },
+      single: vi.fn(async () => {
+        if (context.table === 'user_profiles') {
+          return { data: { memories_indexed: 5 }, error: null };
+        }
+        return { data: null, error: null };
+      }),
       limit(value: number) {
         context.limitValue = value;
         return execute();
@@ -242,7 +256,7 @@ vi.mock('@/utils/supabase/upsert', () => ({
   upsertSyncStatusSafely: vi.fn(async () => ({ error: null })),
 }));
 
-vi.mock('@/utils/ai', () => ({
+vi.mock('@/services/ai/ai', () => ({
   generateEmbedding: hoisted.generateEmbeddingMock,
   chatCompletion: hoisted.chatCompletionMock,
   chatCompletionStream: vi.fn(async () => {

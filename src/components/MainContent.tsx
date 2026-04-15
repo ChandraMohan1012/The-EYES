@@ -43,9 +43,9 @@ function MainContentInner({ onLoaded }: { onLoaded?: () => void }) {
     const load = async () => {
       try {
         const [sumRes, platRes, feedRes] = await Promise.all([
-          fetch('/api/audit-summary'),
-          fetch('/api/platform-readiness'),
-          fetch('/api/memory-feed')
+          fetch('/api/audit-summary', { cache: 'no-store' }),
+          fetch('/api/platform-readiness', { cache: 'no-store' }),
+          fetch('/api/memory-feed', { cache: 'no-store' })
         ]);
         const sP = await sumRes.json();
         const pP = await platRes.json();
@@ -59,12 +59,21 @@ function MainContentInner({ onLoaded }: { onLoaded?: () => void }) {
       } finally { 
         setIsLoading(false);
         if (onLoaded) {
-           // Small delay to ensure CSS transitions are ready
            setTimeout(onLoaded, 100);
         }
       }
     };
+
     load();
+
+    // Real-time UI synchronization listener
+    const handleRefresh = () => {
+      console.log('[Dashboard] Real-time pulse detected. Refreshing neural state...');
+      load();
+    };
+
+    window.addEventListener('eyes-realtime-refresh', handleRefresh);
+    return () => window.removeEventListener('eyes-realtime-refresh', handleRefresh);
   }, [onLoaded]);
 
   // Handle Scroll to Bottom for Chat
@@ -97,6 +106,16 @@ function MainContentInner({ onLoaded }: { onLoaded?: () => void }) {
       });
 
       if (response.ok && response.body) {
+        const citationsHeader = response.headers.get('X-Citations');
+        let citations: any[] = [];
+        if (citationsHeader) {
+          try {
+            citations = JSON.parse(atob(citationsHeader.replace(/-/g, '+').replace(/_/g, '/')));
+          } catch (e) {
+            console.warn('[Dashboard] Failed to parse citations header:', e);
+          }
+        }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let streamedReply = '';
@@ -110,14 +129,24 @@ function MainContentInner({ onLoaded }: { onLoaded?: () => void }) {
           setMessages((prev) => {
             const last = prev[prev.length - 1];
             if (last.role === 'assistant') {
-              return [...prev.slice(0, -1), { role: 'assistant', content: streamedReply, pending: true }];
+              return [...prev.slice(0, -1), { 
+                role: 'assistant', 
+                content: streamedReply, 
+                pending: true,
+                citations: citations.length > 0 ? citations : undefined
+              }];
             }
             return prev;
           });
         }
         
         setMessages((prev) => {
-          return [...prev.slice(0, -1), { role: 'assistant', content: streamedReply, pending: false }];
+          return [...prev.slice(0, -1), { 
+            role: 'assistant', 
+            content: streamedReply, 
+            pending: false,
+            citations: citations.length > 0 ? citations : undefined
+          }];
         });
       }
     } catch (err) {

@@ -3,19 +3,32 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
-export async function GET() {
+function getRequestBaseUrl(request: Request) {
+  const host = request.headers.get('host');
+  if (!host) return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  return `${protocol}://${host}`;
+}
+
+function slackRedirectUri(baseUrl: string) {
+  const explicit = process.env.SLACK_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  return new URL('/api/connect/slack/callback', baseUrl).toString();
+}
+
+export async function GET(request: Request) {
+  const baseUrl = getRequestBaseUrl(request);
   const clientId = process.env.SLACK_CLIENT_ID;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
   if (!clientId) {
-    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=missing_client_id', siteUrl));
+    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=missing_client_id', baseUrl));
   }
 
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
 
   if (!authData.user) {
-    return NextResponse.redirect(new URL('/login', siteUrl));
+    return NextResponse.redirect(new URL('/login', baseUrl));
   }
 
   const state = crypto.randomUUID();
@@ -28,12 +41,12 @@ export async function GET() {
     maxAge: 60 * 10,
   });
 
-  const callbackUrl = new URL('/api/connect/slack/callback', siteUrl);
+  const callbackUrl = slackRedirectUri(baseUrl);
   const authUrl = new URL('https://slack.com/oauth/v2/authorize');
   
   authUrl.searchParams.set('client_id', clientId);
-  authUrl.searchParams.set('redirect_uri', callbackUrl.toString());
-  authUrl.searchParams.set('user_scope', 'channels:read,groups:read,im:read,mpim:read'); // User scopes for reading user's messages/channels
+  authUrl.searchParams.set('redirect_uri', callbackUrl);
+  authUrl.searchParams.set('user_scope', 'channels:read,groups:read,im:read,mpim:read,channels:history,groups:history,im:history,mpim:history'); // Enriched history scopes
   authUrl.searchParams.set('state', state);
 
   return NextResponse.redirect(authUrl);

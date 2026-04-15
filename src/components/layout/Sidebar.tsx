@@ -7,12 +7,14 @@ import {
   GitHubIconOfficial, 
   GmailIconOfficial, 
   NotionIconOfficial, 
-  CalendarIconOfficial 
+  CalendarIconOfficial,
+  SlackIconOfficial,
+  DiscordIconOfficial
 } from '@/components/common/icons/PlatformIcons';
 import styles from './Sidebar.module.css';
 
 interface Platform {
-  id: 'reddit' | 'gmail' | 'github' | 'notion' | 'google-calendar';
+  id: 'reddit' | 'gmail' | 'github' | 'notion' | 'google-calendar' | 'slack' | 'discord';
   name: string;
   icon: React.ReactNode;
   items: number;
@@ -72,12 +74,13 @@ export default function Sidebar() {
 
   const coverageScore = useMemo(() => {
     if (connectedPlatforms.length === 0) return 0;
-    const readyCount = platforms.filter(p => p.connected && p.status === 'connected').length;
+    const readyCount = connectedPlatforms.filter(p => p.status !== 'syncing' && p.status !== 'error').length;
     return Math.round((readyCount / connectedPlatforms.length) * 100);
-  }, [platforms, connectedPlatforms.length]);
+  }, [connectedPlatforms]);
 
   const circumference = 2 * Math.PI * 45;
   const offset = circumference - (coverageScore / 100) * circumference;
+
 
   useEffect(() => {
     let active = true;
@@ -96,7 +99,9 @@ export default function Sidebar() {
                 p.id === 'github' ? <GitHubIconOfficial /> : 
                 p.id === 'gmail' ? <GmailIconOfficial /> : 
                 p.id === 'notion' ? <NotionIconOfficial /> :
-                p.id === 'google-calendar' ? <CalendarIconOfficial /> : <GenericIcon />,
+                p.id === 'google-calendar' ? <CalendarIconOfficial /> : 
+                p.id === 'slack' ? <SlackIconOfficial /> :
+                p.id === 'discord' ? <DiscordIconOfficial /> : <GenericIcon />,
           items: p.totalItems || 0,
           timeAgo: p.connected ? formatRelativeTime(p.lastSyncAt) : 'Not connected'
         }));
@@ -135,8 +140,8 @@ export default function Sidebar() {
             {isLoading ? (
                <div className={styles.sidebarLoadingPlaceholder}>
                   <div className={styles.pulseBar} />
-                  <div className={styles.pulseBar} style={{ width: '80%' }} />
-                  <div className={styles.pulseBar} style={{ width: '60%' }} />
+                  <div className={`${styles.pulseBar} ${styles.pulseBar80}`} />
+                  <div className={`${styles.pulseBar} ${styles.pulseBar60}`} />
                </div>
             ) : connectedPlatforms.length > 0 ? (
               connectedPlatforms.map((platform) => (
@@ -176,7 +181,7 @@ export default function Sidebar() {
             <div className={styles.gaugeInfo}>
                <div className={styles.gaugeActiveCount}>
                  {connectedPlatforms.length > 0 
-                   ? `${platforms.filter(p => p.connected && p.status === 'connected').length}/${connectedPlatforms.length} Platforms`
+                   ? `${connectedPlatforms.filter(p => p.status !== 'syncing' && p.status !== 'error').length}/${connectedPlatforms.length} Platforms`
                    : '0/0 Platforms'
                  }
                </div>
@@ -185,6 +190,7 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
+
     </aside>
   );
 }

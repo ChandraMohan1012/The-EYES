@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@/utils/supabase/server';
 import { upsertSyncStatusSafely } from '@/utils/supabase/upsert';
+import { resolveSyncActor } from '@/utils/sync/actor';
 
-const SYNC_TIMEOUT_MS = 15000;
+const SYNC_TIMEOUT_MS = 25000; // Increased timeout for multiple platforms
 
 type SyncOutcome = {
   platform: string;
@@ -34,15 +34,18 @@ function cookieHeaderValue(cookieStore: Awaited<ReturnType<typeof cookies>>) {
 }
 
 function resolveBaseUrl(request: Request) {
+  // If we are on localhost, always use relative or local origin to avoid hitting production
+  const host = request.headers.get('host');
+  if (host) {
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    return `${protocol}://${host}`;
+  }
+
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
 
-  try {
-    return new URL(request.url).origin;
-  } catch {
-    return 'http://localhost:3000';
-  }
+  return 'http://localhost:3000';
 }
 
 function parseResponsePayload(rawBody: string) {
@@ -60,34 +63,48 @@ function parseResponsePayload(rawBody: string) {
  * This can be triggered from the dashboard or a client-side timer.
  */
 export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const url = new URL(request.url);
+  const depth = url.searchParams.get('depth') || 'shallow';
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const actor = await resolveSyncActor(request);
+    if ('status' in actor) {
+      return NextResponse.json({ error: actor.error }, { status: actor.status });
     }
+
+    const { supabase, userId, mode } = actor;
 
     // Get all connected platforms with valid tokens
     const { data: tokens } = await supabase
       .from('oauth_tokens')
       .select('platform')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (!tokens || tokens.length === 0) {
       return NextResponse.json({ message: 'No connected platforms found.', results: [] });
     }
 
     const appBaseUrl = resolveBaseUrl(request);
-    const cookieStore = await cookies();
-    const cookieHeader = cookieHeaderValue(cookieStore);
+    
+    // Prepare headers for sub-requests
+    const subHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (mode === 'cron') {
+      subHeaders['x-cron-secret'] = process.env.CRON_SECRET || '';
+      subHeaders['x-cron-user-id'] = userId;
+    } else {
+      const cookieStore = await cookies();
+      subHeaders['Cookie'] = cookieHeaderValue(cookieStore);
+    }
 
     const runPlatformSync = async (platform: string): Promise<SyncOutcome> => {
       const routePlatform = toSyncRoutePlatform(platform);
       const startedAt = Date.now();
 
       await upsertSyncStatusSafely(supabase, {
-        user_id: user.id,
+        user_id: userId,
         platform,
         status: 'syncing',
         sync_progress: 1,
@@ -98,11 +115,12 @@ export async function POST(request: Request) {
       const timeoutId = setTimeout(() => controller.abort(), SYNC_TIMEOUT_MS);
 
       try {
-        const response = await fetch(`${appBaseUrl}/api/sync/${routePlatform}`, {
+        const syncUrl = new URL(`${appBaseUrl}/api/sync/${routePlatform}`);
+        syncUrl.searchParams.set('depth', depth);
+
+        const response = await fetch(syncUrl.toString(), {
           method: 'POST',
-          headers: {
-            Cookie: cookieHeader,
-          },
+          headers: subHeaders,
           cache: 'no-store',
           signal: controller.signal,
         });
@@ -113,7 +131,7 @@ export async function POST(request: Request) {
         if (!response.ok) {
           const message = `Provider sync failed (${response.status})`;
           await upsertSyncStatusSafely(supabase, {
-            user_id: user.id,
+            user_id: userId,
             platform,
             status: 'error',
             sync_progress: 0,
@@ -142,7 +160,7 @@ export async function POST(request: Request) {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         await upsertSyncStatusSafely(supabase, {
-          user_id: user.id,
+          user_id: userId,
           platform,
           status: 'error',
           sync_progress: 0,
@@ -170,7 +188,7 @@ export async function POST(request: Request) {
         const successCount = fulfilled.filter((item) => item.value.success).length;
         const failedCount = fulfilled.length - successCount + (settled.length - fulfilled.length);
         console.log(
-          `[Sync All] Background sync complete. user=${user.id} success=${successCount} failed=${failedCount}`
+          `[Sync All] Background sync complete. user=${userId} success=${successCount} failed=${failedCount}`
         );
       });
 

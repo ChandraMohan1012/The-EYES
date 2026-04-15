@@ -165,3 +165,86 @@ export function scoreRedditEvent(params: { body: string; subreddit: string; scor
     engagementScore,
   });
 }
+export function scoreSlackEvent(params: { text: string; channelName: string; user: string }): RiskAssessment {
+  const sourceHints: string[] = [];
+  let exposureScore = 0;
+
+  if (params.channelName.toLowerCase().includes('public') || params.channelName.toLowerCase() === 'general') {
+    exposureScore += 15;
+    sourceHints.push('Message is in a high-visibility public channel');
+  }
+
+  return assessBaseRisk({
+    content: params.text,
+    title: `Slack Message in #${params.channelName}`,
+    sourceHints,
+    exposureScore,
+  });
+}
+
+export function scoreDiscordEvent(params: { text: string; channelName?: string; user: string }): RiskAssessment {
+  const sourceHints: string[] = [];
+  let exposureScore = 0;
+
+  if (params.channelName?.toLowerCase().includes('admin') || params.channelName?.toLowerCase().includes('staff')) {
+    exposureScore += 12;
+    sourceHints.push('Message is in a potentially sensitive internal channel');
+  }
+
+  return assessBaseRisk({
+    content: params.text,
+    title: `Discord Message in ${params.channelName || 'Private Channel'}`,
+    sourceHints,
+    exposureScore,
+  });
+}
+
+export function scoreNotionEvent(params: { title: string; content?: string }): RiskAssessment {
+  const sourceHints: string[] = [];
+  let exposureScore = 0;
+
+  if (params.title.toLowerCase().includes('private') || params.title.toLowerCase().includes('password')) {
+    exposureScore += 20;
+    sourceHints.push('Document title contains sensitive category keywords');
+  }
+
+  return assessBaseRisk({
+    content: params.content || params.title,
+    title: params.title,
+    sourceHints,
+    exposureScore,
+  });
+}
+export function scoreDropboxEvent(params: { name: string; path?: string }): RiskAssessment {
+  const sourceHints: string[] = [];
+  let exposureScore = 0;
+
+  if (params.name.toLowerCase().includes('backup') || params.name.toLowerCase().includes('export')) {
+    exposureScore += 15;
+    sourceHints.push('File appears to be an archive or backup');
+  }
+
+  return assessBaseRisk({
+    content: params.path || params.name,
+    title: `Dropbox File: ${params.name}`,
+    sourceHints,
+    exposureScore,
+  });
+}
+
+export function scoreTwitterEvent(params: { text: string; reach?: number }): RiskAssessment {
+  const sourceHints: string[] = [];
+  let exposureScore = 0;
+
+  if ((params.reach || 0) > 1000) {
+    exposureScore += 40;
+    sourceHints.push('High social reach increases reputation impact');
+  }
+
+  return assessBaseRisk({
+    content: params.text,
+    title: 'X/Twitter Post',
+    sourceHints,
+    exposureScore,
+  });
+}

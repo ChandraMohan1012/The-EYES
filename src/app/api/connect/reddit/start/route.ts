@@ -9,6 +9,12 @@ function appBaseUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 }
 
+function redditRedirectUri() {
+  const explicit = process.env.REDDIT_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  return new URL('/api/connect/reddit/callback', appBaseUrl()).toString();
+}
+
 export async function GET() {
   const clientId = process.env.REDDIT_CLIENT_ID;
 
@@ -33,12 +39,12 @@ export async function GET() {
     maxAge: 60 * 10,
   });
 
-  const callbackUrl = new URL('/api/connect/reddit/callback', appBaseUrl());
+  const callbackUrl = redditRedirectUri();
   const authUrl = new URL('https://www.reddit.com/api/v1/authorize');
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('state', state);
-  authUrl.searchParams.set('redirect_uri', callbackUrl.toString());
+  authUrl.searchParams.set('redirect_uri', callbackUrl);
   authUrl.searchParams.set('duration', 'permanent');
   authUrl.searchParams.set('scope', 'identity history read mysubreddits');
 

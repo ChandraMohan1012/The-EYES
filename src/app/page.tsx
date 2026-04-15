@@ -18,6 +18,8 @@ export default function Home() {
 
   return (
     <div className={styles.pageRoot}>
+      <div className="neural-bg" />
+      <div className="scanline" />
       {isSystemBooting && (
         <div className={styles.globalBootLoader}>
           <div className={styles.bootText}>

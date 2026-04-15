@@ -38,7 +38,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'GitHub is not connected yet.' }, { status: 401 });
     }
 
-    const repoResponse = await fetch('https://api.github.com/user/repos?sort=updated&per_page=10', {
+    const url = new URL(request.url);
+    const depth = url.searchParams.get('depth') || 'shallow';
+    const perPage = depth === 'deep' ? 100 : 10;
+
+    const repoResponse = await fetch(`https://api.github.com/user/repos?sort=updated&per_page=${perPage}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/vnd.github+json',

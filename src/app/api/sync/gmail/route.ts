@@ -45,7 +45,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Gmail session expired and refresh failed.' }, { status: 401 });
     }
 
-    const listResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10', {
+    const url = new URL(request.url);
+    const depth = url.searchParams.get('depth') || 'shallow';
+    const maxResults = depth === 'deep' ? 50 : 10;
+
+    const listResponse = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

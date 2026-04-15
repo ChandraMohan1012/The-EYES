@@ -2,28 +2,41 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
+function getRequestBaseUrl(request: Request) {
+  const host = request.headers.get('host');
+  if (!host) return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  return `${protocol}://${host}`;
+}
+
+function slackRedirectUri(baseUrl: string) {
+  const explicit = process.env.SLACK_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  return new URL('/api/connect/slack/callback', baseUrl).toString();
+}
+
 export async function GET(request: Request) {
+  const baseUrl = getRequestBaseUrl(request);
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const state = searchParams.get('state');
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const cookieStore = await cookies();
   const savedState = cookieStore.get('slack_oauth_state')?.value;
 
   if (!code || !state || state !== savedState) {
-    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=invalid_state', siteUrl));
+    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=invalid_state', baseUrl));
   }
 
   const clientId = process.env.SLACK_CLIENT_ID;
   const clientSecret = process.env.SLACK_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=missing_config', siteUrl));
+    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=missing_config', baseUrl));
   }
 
   try {
-    const callbackUrl = new URL('/api/connect/slack/callback', siteUrl);
+    const callbackUrl = slackRedirectUri(baseUrl);
     
     const response = await fetch('https://slack.com/api/oauth.v2.access', {
       method: 'POST',
@@ -32,7 +45,7 @@ export async function GET(request: Request) {
         client_id: clientId,
         client_secret: clientSecret,
         code,
-        redirect_uri: callbackUrl.toString(),
+        redirect_uri: callbackUrl,
       }),
     });
 
@@ -40,14 +53,14 @@ export async function GET(request: Request) {
 
     if (!response.ok || !data.ok) {
       console.error('Slack Token Error:', data);
-      return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=token_exchange_failed', siteUrl));
+      return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=token_exchange_failed', baseUrl));
     }
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.redirect(new URL('/login', siteUrl));
+      return NextResponse.redirect(new URL('/login', baseUrl));
     }
 
     // Note: Slack returns user tokens in authed_user block
@@ -71,7 +84,7 @@ export async function GET(request: Request) {
 
     if (tokenError) {
       console.error('Database Error:', tokenError);
-      return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=db_save_failed', siteUrl));
+      return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=db_save_failed', baseUrl));
     }
 
     // Initialize sync status
@@ -84,9 +97,9 @@ export async function GET(request: Request) {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,platform' });
 
-    return NextResponse.redirect(new URL('/connect/slack?oauth=success', siteUrl));
+    return NextResponse.redirect(new URL('/connect/slack?oauth=success', baseUrl));
   } catch (err) {
     console.error('Slack Auth Error:', err);
-    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=server_error', siteUrl));
+    return NextResponse.redirect(new URL('/connect/slack?oauth=error&reason=server_error', baseUrl));
   }
 }

@@ -81,6 +81,30 @@ const platformMeta: Record<string, PlatformMeta> = {
     syncFrequency: 'Every 2 hours',
     privacyNote: 'EYES uses the Notion API for read-only access. We only index content you explicitly share with our integration.',
     oauthUrl: '/api/connect/notion/start',
+  },
+  slack: {
+    name: 'Slack',
+    color: '#4a154b',
+    gradient: 'linear-gradient(135deg, #4a154b 0%, #611f69 100%)',
+    description: 'Connect Slack to index workspace messages, threads, and files from your channels.',
+    icon: <SlackIcon />,
+    permissions: ['Read public channels', 'Read private channels (with user token)', 'Read direct messages', 'Access files'],
+    dataTypes: ['Messages', 'Threads', 'Channel Metadata', 'Files'],
+    syncFrequency: 'Every 30 minutes',
+    privacyNote: 'EYES uses user-scoped tokens. We only index messages you have access to.',
+    oauthUrl: '/api/connect/slack/start',
+  },
+  discord: {
+    name: 'Discord',
+    color: '#5865f2',
+    gradient: 'linear-gradient(135deg, #5865f2 0%, #7289da 100%)',
+    description: 'Connect Discord to index server messages, DM threads (where available), and interactions.',
+    icon: <DiscordIcon />,
+    permissions: ['Read messages via OAuth', 'View your profile and servers', 'Read channel history'],
+    dataTypes: ['Server Messages', 'Personal activity', 'Metadata'],
+    syncFrequency: 'Every 30 minutes',
+    privacyNote: 'EYES respects Discord privacy settings. We never store non-public user data without consent.',
+    oauthUrl: '/api/connect/discord/start',
   }
 };
 
@@ -488,3 +512,6 @@ function NotionIcon() {
     </svg>
   );
 }
+
+function SlackIcon() { return <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523 2.527 2.527 0 0 1-2.522-2.523 2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.263 0a2.527 2.527 0 0 1 2.522-2.52 2.527 2.527 0 0 1 2.52 2.52v6.313A2.528 2.528 0 0 1 8.827 24a2.528 2.528 0 0 1-2.522-2.522v-6.313zM8.827 5.042a2.528 2.528 0 0 1-2.522-2.52A2.528 2.528 0 0 1 8.827 0a2.528 2.528 0 0 1 2.522 2.522v2.52H8.827zm0 1.263a2.527 2.527 0 0 1 2.522 2.522 2.527 2.527 0 0 1-2.522 2.52H2.515A2.528 2.528 0 0 1 0 8.827a2.528 2.528 0 0 1 2.515-2.522h6.312zm10.13 3.76a2.528 2.528 0 0 1 2.523-2.52 2.527 2.527 0 0 1 2.52 2.52 2.527 2.527 0 0 1-2.52 2.522h-2.523v-2.522zm-1.262 0a2.527 2.527 0 0 1-2.523 2.522 2.527 2.527 0 0 1-2.52-2.522V3.753A2.528 2.528 0 0 1 15.173 1.23a2.528 2.528 0 0 1 2.523 2.523v6.312zm-3.76 10.133a2.528 2.528 0 0 1 2.523 2.522 2.528 2.528 0 0 1-2.523 2.522 2.528 2.528 0 0 1-2.522-2.522v-2.522h2.522zm0-1.263a2.527 2.527 0 0 1-2.522-2.522 2.527 2.527 0 0 1 2.522-2.52h6.313A2.528 2.528 0 0 1 24 15.173a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>; }
+function DiscordIcon() { return <svg width="48" height="48" viewBox="0 0 24 24" fill="#5865f2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 11.749 11.749 0 0 0-.617-1.25.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.069.069 0 0 0-.032.027C.533 9.048-.32 13.572.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.159-.118.312-.245.464-.372a.074.074 0 0 1 .077-.01c3.931 1.8 8.19 1.8 12.067 0a.074.074 0 0 1 .077.01c.152.127.305.254.463.372a.077.077 0 0 1-.007.128 12.73 12.73 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>; }

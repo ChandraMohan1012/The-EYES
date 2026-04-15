@@ -31,6 +31,7 @@ export interface PlatformStatus {
   name: string;
   connected: boolean;
   status: 'idle' | 'connecting' | 'authenticating' | 'syncing' | 'connected' | 'error';
+  items: number;
 }
 
 export interface FeedItem {
@@ -40,6 +41,10 @@ export interface FeedItem {
   content: string | null;
   timestamp: string | null;
   author: string | null;
+  is_flagged: boolean;
+  flag_severity: string | null;
+  flag_reason: string | null;
+  event_type: string | null;
 }
 
 
@@ -51,9 +56,21 @@ export interface ChatResponse {
   reply: string;
 }
 
+export interface Citation {
+  sourceId: number;
+  platform: string;
+  title: string | null;
+  snippet: string;
+}
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
   pending?: boolean;
+  citations?: Citation[];
+  diagnostics?: {
+    confidenceScore: number;
+    latencyMs: number;
+  };
 }
 

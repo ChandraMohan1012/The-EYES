@@ -74,6 +74,12 @@ const hoisted = vi.hoisted(() => {
               error: null,
             };
           }),
+          single: vi.fn(async () => {
+            if (table === 'user_profiles') {
+              return { data: { memories_indexed: 5 }, error: null };
+            }
+            return { data: null, error: null };
+          }),
         };
 
         return builder;
@@ -110,7 +116,7 @@ vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(async () => hoisted.createSupabase()),
 }));
 
-vi.mock('@/utils/ai', () => ({
+vi.mock('@/services/ai/ai', () => ({
   generateEmbedding: hoisted.generateEmbeddingMock,
   chatCompletion: hoisted.chatCompletionMock,
   chatCompletionStream: hoisted.chatCompletionStreamMock,

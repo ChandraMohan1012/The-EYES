@@ -32,7 +32,7 @@ export function SynthesisView({
   return (
     <div className={styles.heroLayout}>
       <div className={styles.heroContent}>
-        <h1 className={styles.megaTitle}>EYES</h1>
+        <h1 className={`${styles.megaTitle} pulse-subtle`}>EYES</h1>
         <div className={styles.heroSummary}>
           <div className={styles.shieldIcon}><ShieldIcon /></div>
           <span>I&apos;ve indexed <strong>{totalMemories.toLocaleString()}</strong> things you&apos;ve said since 2018.</span>
@@ -50,7 +50,6 @@ export function SynthesisView({
               onKeyDown={(e) => e.key === 'Enter' && onSubmit(query)}
               disabled={isStreaming}
             />
-            <div className={styles.shortcutHint}><span>⌘</span><span>K</span></div>
             <button 
               className={styles.commandSendBtn} 
               onClick={() => onSubmit(query)}
@@ -72,11 +71,23 @@ export function SynthesisView({
                   {m.content}
                   {m.pending && <span className={styles.typingCursor}>▊</span>}
                 </div>
+                {m.role === 'assistant' && m.citations && m.citations.length > 0 && (
+                  <div className={styles.citationStrip}>
+                    {m.citations.map((c) => (
+                      <div key={c.sourceId} className={styles.citationChip} title={c.snippet}>
+                        <span className={styles.sourceId}>[{c.sourceId}]</span>
+                        <span className={styles.sourcePlatform}>{c.platform}</span>
+                        {c.title && <span className={styles.sourceTitle}>- {c.title.slice(0, 20)}...</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
              </div>
            ))}
            <div ref={messagesEndRef} />
         </div>
       )}
+
       
       <div className={styles.quickActions}>
          <div className={styles.actionCard} onClick={() => setView('feed')}><span>Memory Feed</span></div>

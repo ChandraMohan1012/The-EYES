@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   RedditIconOfficial, 
   GitHubIconOfficial, 
@@ -6,10 +5,7 @@ import {
   CalendarIconOfficial, 
   NotionIconOfficial, 
   SlackIconOfficial, 
-  LinkedInIconOfficial, 
-  DiscordIconOfficial, 
-  XIconOfficial, 
-  DropboxIconOfficial 
+  DiscordIconOfficial 
 } from '../components/common/icons/PlatformIcons';
 
 export const ALL_POSSIBLE_PLATFORMS = [
@@ -19,9 +15,6 @@ export const ALL_POSSIBLE_PLATFORMS = [
   { id: 'reddit', name: 'Reddit', icon: <RedditIconOfficial /> },
   { id: 'notion', name: 'Notion', icon: <NotionIconOfficial /> },
   { id: 'slack', name: 'Slack', icon: <SlackIconOfficial /> },
-  { id: 'linkedin', name: 'LinkedIn', icon: <LinkedInIconOfficial /> },
-  { id: 'discord', name: 'Discord', icon: <DiscordIconOfficial /> },
-  { id: 'twitter', name: 'X (Twitter)', icon: <XIconOfficial /> },
-  { id: 'dropbox', name: 'Dropbox', icon: <DropboxIconOfficial /> }
+  { id: 'discord', name: 'Discord', icon: <DiscordIconOfficial /> }
 ];
 

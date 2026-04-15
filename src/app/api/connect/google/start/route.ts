@@ -20,6 +20,9 @@ function appBaseUrl() {
 }
 
 function googleRedirectUri(request: Request) {
+  const explicit = process.env.GOOGLE_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+
   let requestOrigin = appBaseUrl();
   try {
     requestOrigin = new URL(request.url).origin;
@@ -27,24 +30,7 @@ function googleRedirectUri(request: Request) {
     requestOrigin = appBaseUrl();
   }
 
-  const requestDerived = new URL('/api/connect/google/callback', requestOrigin).toString();
-  const explicit = process.env.GOOGLE_REDIRECT_URI?.trim();
-  if (!explicit) return requestDerived;
-
-  try {
-    const parsed = new URL(explicit);
-    if (process.env.NODE_ENV !== 'production' && parsed.origin !== requestOrigin) {
-      console.warn(
-        `[Google OAuth] GOOGLE_REDIRECT_URI origin (${parsed.origin}) does not match request origin (${requestOrigin}). Using request-derived callback URL.`
-      );
-      return requestDerived;
-    }
-
-    return parsed.toString();
-  } catch {
-    console.warn('[Google OAuth] GOOGLE_REDIRECT_URI is invalid. Using request-derived callback URL.');
-    return requestDerived;
-  }
+  return new URL('/api/connect/google/callback', requestOrigin).toString();
 }
 
 export async function GET(request: Request) {
