@@ -36,7 +36,7 @@ test.describe('Connect to Chat smoke flow', () => {
 
     await expect(page.getByRole('heading', { name: 'EYES' })).toBeVisible();
 
-    const chatInput = page.getByPlaceholder('Ask anything about yourself...');
+    const chatInput = page.getByPlaceholder('Search digital memories...');
     await expect(chatInput).toBeVisible();
 
     await chatInput.fill('What changed in my GitHub activity this week?');
