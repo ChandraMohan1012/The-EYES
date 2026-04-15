@@ -4,12 +4,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
 function getAppBaseUrl(request: Request) {
-  const host = request.headers.get('host');
-  if (host) {
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    return `${protocol}://${host}`;
+  const host = request.headers.get('host') || 'localhost:3000';
+  let protocol = 'https';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    protocol = 'http';
   }
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  return process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
 }
 
 function discordRedirectUri(request: Request) {
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', callbackUrl);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', 'identify email messages.read'); // messages.read requires bot/privileged scopes usually, but identify/email for now
+  authUrl.searchParams.set('scope', 'identify email'); // messages.read requires bot/privileged scopes
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('prompt', 'consent');
 

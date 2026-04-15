@@ -351,8 +351,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.warn('[Auth] Refresh token failure during session bootstrap. Purging local Supabase auth artifacts.');
           await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
           purgeSupabaseLocalAuthArtifacts();
+        } else {
+          console.error('[Auth] Initial session sync failed (purging stale state):', err);
         }
-        console.error('[Auth] Initial session sync failed (purging stale state):', err);
         if (mounted) {
           setUser(null);
         }

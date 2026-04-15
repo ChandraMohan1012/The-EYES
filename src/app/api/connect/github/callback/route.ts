@@ -12,8 +12,19 @@ type GitHubTokenResponse = {
   error_description?: string;
 };
 
-function appBaseUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+function getAppBaseUrl(request: Request) {
+  const host = request.headers.get('host') || 'localhost:3000';
+  let protocol = 'https';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    protocol = 'http';
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
+}
+
+function githubRedirectUri(request: Request) {
+  const explicit = process.env.GITHUB_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  return new URL('/api/connect/github/callback', getAppBaseUrl(request)).toString();
 }
 
 export async function GET(request: Request) {
@@ -25,18 +36,18 @@ export async function GET(request: Request) {
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=missing_github_env', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=missing_github_env', getAppBaseUrl(request)));
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=missing_code_or_state', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=missing_code_or_state', getAppBaseUrl(request)));
   }
 
   const cookieStore = await cookies();
   const expectedState = cookieStore.get('github_oauth_state')?.value;
 
   if (!expectedState || expectedState !== state) {
-    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=invalid_state', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=invalid_state', getAppBaseUrl(request)));
   }
 
   cookieStore.delete('github_oauth_state');
@@ -45,7 +56,7 @@ export async function GET(request: Request) {
   const { data: authData } = await supabase.auth.getUser();
 
   if (!authData.user) {
-    return NextResponse.redirect(new URL('/login', appBaseUrl()));
+    return NextResponse.redirect(new URL('/login', getAppBaseUrl(request)));
   }
 
   const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
@@ -59,18 +70,19 @@ export async function GET(request: Request) {
       client_secret: clientSecret,
       code,
       state,
+      redirect_uri: githubRedirectUri(request),
     }),
     cache: 'no-store',
   });
 
   if (!tokenResponse.ok) {
-    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=token_exchange_failed', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=token_exchange_failed', getAppBaseUrl(request)));
   }
 
   const tokenBody = (await tokenResponse.json()) as GitHubTokenResponse;
 
   if (!tokenBody.access_token) {
-    return NextResponse.redirect(new URL(`/connect/github?oauth=error&reason=${encodeURIComponent(tokenBody.error || 'no_access_token')}`, appBaseUrl()));
+    return NextResponse.redirect(new URL(`/connect/github?oauth=error&reason=${encodeURIComponent(tokenBody.error || 'no_access_token')}`, getAppBaseUrl(request)));
   }
 
   const now = new Date().toISOString();
@@ -99,8 +111,8 @@ export async function GET(request: Request) {
   ]);
 
   if (tokenSaveError || syncSaveError) {
-    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=token_persist_failed', appBaseUrl()));
+    return NextResponse.redirect(new URL('/connect/github?oauth=error&reason=token_persist_failed', getAppBaseUrl(request)));
   }
 
-  return NextResponse.redirect(new URL('/connect/github?oauth=success', appBaseUrl()));
+  return NextResponse.redirect(new URL('/connect/github?oauth=success', getAppBaseUrl(request)));
 }

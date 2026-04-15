@@ -6,10 +6,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
 function getRequestBaseUrl(request: Request) {
-  const host = request.headers.get('host');
-  if (!host) return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  return `${protocol}://${host}`;
+  const host = request.headers.get('host') || 'localhost:3000';
+  let protocol = 'https';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    protocol = 'http';
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
 }
 
 function notionRedirectUri(baseUrl: string) {

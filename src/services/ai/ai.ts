@@ -163,7 +163,7 @@ export async function chatCompletionStream(
                     const data = JSON.parse(line.slice(6));
                     const delta = data.delta?.text;
                     if (delta) controller.enqueue(encoder.encode(delta));
-                  } catch (parseErr) {
+                  } catch {
                     // Ignore parse errors
                   }
                 }

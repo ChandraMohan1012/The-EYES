@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createClient } from '@/utils/supabase/server';
 
-type PlatformId = 'reddit' | 'gmail' | 'github' | 'notion' | 'google-calendar';
+type PlatformId = 'reddit' | 'gmail' | 'github' | 'notion' | 'google-calendar' | 'discord' | 'slack' | 'twitter';
 
 type PlatformReadiness = {
   id: PlatformId;
@@ -58,6 +58,24 @@ const platformConfigs: Array<{
     name: 'Notion',
     env: ['NOTION_CLIENT_ID', 'NOTION_CLIENT_SECRET', 'NEXT_PUBLIC_SITE_URL', 'TOKEN_ENCRYPTION_KEY'],
     scopes: ['read content', 'read user'],
+  },
+  {
+    id: 'discord',
+    name: 'Discord',
+    env: ['DISCORD_CLIENT_ID', 'DISCORD_CLIENT_SECRET', 'NEXT_PUBLIC_SITE_URL', 'TOKEN_ENCRYPTION_KEY'],
+    scopes: ['identify', 'email'],
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    env: ['SLACK_CLIENT_ID', 'SLACK_CLIENT_SECRET', 'NEXT_PUBLIC_SITE_URL', 'TOKEN_ENCRYPTION_KEY'],
+    scopes: ['channels:history', 'groups:history', 'im:history', 'mpim:history'],
+  },
+  {
+    id: 'twitter',
+    name: 'Twitter (X)',
+    env: ['TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET', 'NEXT_PUBLIC_SITE_URL', 'TOKEN_ENCRYPTION_KEY'],
+    scopes: ['tweet.read', 'users.read', 'offline.access'],
   },
 ];
 

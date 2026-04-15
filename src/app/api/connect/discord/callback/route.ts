@@ -1,13 +1,29 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { encryptToken } from '@/utils/tokens';
+
+function getAppBaseUrl(request: Request) {
+  const host = request.headers.get('host') || 'localhost:3000';
+  let protocol = 'https';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    protocol = 'http';
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
+}
+
+function discordRedirectUri(request: Request) {
+  const explicit = process.env.DISCORD_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  return new URL('/api/connect/discord/callback', getAppBaseUrl(request)).toString();
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const state = searchParams.get('state');
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteUrl = getAppBaseUrl(request);
   const cookieStore = await cookies();
   const savedState = cookieStore.get('discord_oauth_state')?.value;
 
@@ -23,7 +39,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const callbackUrl = new URL('/api/connect/discord/callback', siteUrl);
+    const callbackUrl = discordRedirectUri(request);
     
     const response = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -33,7 +49,7 @@ export async function GET(request: Request) {
         client_secret: clientSecret,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: callbackUrl.toString(),
+        redirect_uri: callbackUrl,
       }),
     });
 
@@ -60,8 +76,8 @@ export async function GET(request: Request) {
       .upsert({
         user_id: user.id,
         platform: 'discord',
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
+        access_token: encryptToken(data.access_token),
+        refresh_token: data.refresh_token ? encryptToken(data.refresh_token) : null,
         expires_at: expiresAt,
         scope: data.scope,
         updated_at: new Date().toISOString(),

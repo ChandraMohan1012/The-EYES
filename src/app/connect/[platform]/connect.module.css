@@ -58,6 +58,33 @@
   --platform-gradient: linear-gradient(135deg, #4285f4 0%, #669df6 100%);
 }
 
+.platformDiscord {
+  --platform-color: #5865f2;
+  --platform-color-soft: rgba(88, 101, 242, 0.08);
+  --platform-color-soft-strong: rgba(88, 101, 242, 0.14);
+  --platform-color-border: rgba(88, 101, 242, 0.24);
+  --platform-glow: radial-gradient(circle at center, rgba(88, 101, 242, 0.1) 0%, transparent 70%);
+  --platform-gradient: linear-gradient(135deg, #5865f2 0%, #7289da 100%);
+}
+
+.platformSlack {
+  --platform-color: #e01e5a;
+  --platform-color-soft: rgba(224, 30, 90, 0.08);
+  --platform-color-soft-strong: rgba(224, 30, 90, 0.14);
+  --platform-color-border: rgba(224, 30, 90, 0.24);
+  --platform-glow: radial-gradient(circle at center, rgba(224, 30, 90, 0.1) 0%, transparent 70%);
+  --platform-gradient: linear-gradient(135deg, #e01e5a 0%, #ff4b82 100%);
+}
+
+.platformTwitter {
+  --platform-color: #1da1f2;
+  --platform-color-soft: rgba(29, 161, 242, 0.08);
+  --platform-color-soft-strong: rgba(29, 161, 242, 0.14);
+  --platform-color-border: rgba(29, 161, 242, 0.24);
+  --platform-glow: radial-gradient(circle at center, rgba(29, 161, 242, 0.1) 0%, transparent 70%);
+  --platform-gradient: linear-gradient(135deg, #1da1f2 0%, #71c9f8 100%);
+}
+
 @keyframes pageIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
